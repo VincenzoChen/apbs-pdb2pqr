@@ -6,8 +6,10 @@ file.
 """
 import logging
 import argparse
+import tempfile
 from pathlib import Path
 import propka.lib
+import propka.molecular_container
 from . import aa
 from . import debump
 from . import hydrogens
@@ -15,7 +17,7 @@ from . import forcefield
 from . import protein as prot
 from . import input_output as io
 from .config import VERSION, TITLE_FORMAT_STRING, CITATIONS, FORCE_FIELDS
-from .config import REPAIR_LIMIT
+from .config import REPAIR_LIMIT, PROPKA_LINE_LENGTH
 
 
 _LOGGER = logging.getLogger("PDB2PQR%s" % VERSION)
@@ -255,10 +257,10 @@ def setup_molecule(pdblist, definition, ligand_path):
         ligand:  ligand object (may be None)
     """
     if ligand_path is not None:
-        with open(ligand_path, "rt", encoding="utf-8") as ligand_file:
-            raise NotImplementedError("Ligand functionality is temporarily disabled.")
-            # TODO - check to see if ligff updates copy of definition stored with protein
-            # protein, definition, ligand = ligff.initialize(definition, ligand_file, pdblist)
+        raise NotImplementedError("Ligand functionality is temporarily disabled.")
+        # with open(ligand_path, "rt", encoding="utf-8") as ligand_file:
+        #     # TODO - check to see if ligff updates copy of definition stored with protein
+        #     protein, definition, ligand = ligff.initialize(definition, ligand_file, pdblist)
     else:
         protein = prot.Protein(pdblist, definition)
         ligand = None
@@ -340,6 +342,36 @@ def drop_water(pdblist):
     return pdblist_new
 
 
+def run_propka(args, protein):
+    """Perform a PROPKA run.
+
+    Args:
+        args:  argparse namespace
+        protein:  Project object.  TODO - replace "protein" with "biomolecule"
+    Returns:
+        dictionary with pKa results.
+    """
+    if args.filenames:
+        _LOGGER.warning("Ignoring additional PDB files: %s", args.filenames)
+    _LOGGER.debug("Writing hydrogen-free PDB file to memory")
+    # TODO - this is a hack to avoid upgrading PROPKA to pathlib
+    with tempfile.TemporaryDirectory() as pdb_dir:
+        pdb_path = Path(pdb_dir) / "propka.pdb"
+        with open(pdb_path, "wt") as pdb_file:
+            for atom in protein.atoms:
+                if not atom.is_hydrogen:
+                    atom_txt = atom.get_pdb_string()
+                    atom_txt = atom_txt[:PROPKA_LINE_LENGTH]
+                    pdb_file.write("%s\n" % atom_txt)
+        _LOGGER.debug("Starting PROPKA.")
+        my_molecule = propka.molecular_container.Molecular_container(str(pdb_path), args)
+        my_molecule.calculate_pka()
+        my_molecule.write_pka()
+        for propka_file in Path(pdb_dir).iterdir():
+            _LOGGER.error(propka_file)
+        raise NotImplementedError("PROPKA won't write files where it is supposed to!")
+
+
 def non_trivial(args, protein, definition, is_cif):
     """Perform a non-trivial PDB2PQR run.
 
@@ -378,7 +410,7 @@ def non_trivial(args, protein, definition, is_cif):
 
         if args.pka_method == "propka":
             _LOGGER.info("Assigning titration states with PROPKA.")
-            raise NotImplementedError("PROPKA not implemented.")
+            pka_dict = run_propka(args, protein)
         elif args.pka_method == "pdb2pka":
             _LOGGER.info("Assigning titration states with PDB2PKA.")
             raise NotImplementedError("PDB2PKA not implemented.")

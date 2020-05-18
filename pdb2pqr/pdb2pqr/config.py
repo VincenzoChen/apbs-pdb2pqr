@@ -91,3 +91,6 @@ ANGLE_CUTOFF = 20.0
 
 # Cutoff for H(D) to A hydrogen bond distance
 DIST_CUTOFF = 3.3
+
+# Truncate lines that are too long for PROPKA
+PROPKA_LINE_LENGTH = 70

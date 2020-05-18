@@ -177,6 +177,8 @@ class Atom(pdb.ATOM):
     def get_pqr_string(self, chainflag=False):
         """Returns a string of the new atom type.
 
+        TODO - this could be a property method
+
         Uses the ATOM string output but changes the first field to either by
         ATOM or HETATM as necessary. This is used to create the output for pqr
         files!
@@ -199,6 +201,8 @@ class Atom(pdb.ATOM):
 
     def get_pdb_string(self):
         """Returns a string of the new atom type.
+
+        TODO - this could be a property method
 
         Uses the ATOM string output but changes the first field to either by
         ATOM or HETATM as necessary. This is for the pdb representation of the
