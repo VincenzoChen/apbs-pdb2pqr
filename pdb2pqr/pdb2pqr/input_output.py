@@ -16,7 +16,7 @@ from .config import AA_DEF_PATH, NA_DEF_PATH, PATCH_DEF_PATH
 
 
 _LOGGER = logging.getLogger(__name__)
-
+_LOGGER_CACHE = list()
 
 class DuplicateFilter(logging.Filter):
     """Filter duplicate messages."""
@@ -34,6 +34,7 @@ class DuplicateFilter(logging.Filter):
                         return False
                     elif self.warn_count[fwarn] == FILTER_WARNINGS_LIMIT:
                         _LOGGER.warning("Suppressing further '%s' messages", fwarn)
+                        _LOGGER_CACHE.append(f"WARN: Suppressing further '{fwarn}' messages")
                         return False
                     else:
                         return True
@@ -313,7 +314,7 @@ def get_molecule(input_path):
     input_file = get_pdb_file(input_path)
     is_cif = False
 
-    if path.suffix.lower() == "cif":
+    if path.suffix.lower() == ".cif":
         pdblist, errlist = cif.read_cif(input_file)
         is_cif = True
     else:
@@ -360,3 +361,16 @@ def get_definitions(aa_path=AA_DEF_PATH, na_path=NA_DEF_PATH,
                                                patch_file=patch_file)
     return definitions
 
+def write_logging_cache(output_pqr):
+    """Write the logging cache out to a log file.
+
+    Args:
+        output_pqr
+
+    Returns:
+        None (Outputs a log file in the same location as the output_pqr
+    """
+    output_pth = Path(output_pqr)
+    log_file = Path(output_pth.parent, output_pth.stem + '.log')
+    with open(log_file, 'w') as dest:
+        dest.writelines(["%s\n" % log for log in _LOGGER_CACHE])

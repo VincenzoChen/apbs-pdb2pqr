@@ -485,3 +485,7 @@ def main(args):
 
     if args.apbs_input:
         io.dump_apbs(args.output_pqr)
+
+    import pdb 
+    pdb.set_trace()
+    io.write_logging_cache(args.output_pqr)
