@@ -9,6 +9,7 @@ import logging
 from sys import version_info
 assert version_info >= (3, 5)
 from .main import main, build_parser
+from pathlib import Path
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,8 +17,17 @@ logging.captureWarnings(True)
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    logging.captureWarnings(True)
     parser = build_parser()
     args = parser.parse_args()
+
+    # Get the output logging location
+    output_pth = Path(args.output_pqr)
+    log_file = Path(output_pth.parent, output_pth.stem + '.log')
+
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.DEBUG
+        )
+    logging.captureWarnings(True)
+    _LOGGER.info(args)
     main(args)

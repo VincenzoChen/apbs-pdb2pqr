@@ -18,10 +18,8 @@ from . import input_output as io
 from .config import VERSION, TITLE_FORMAT_STRING, CITATIONS, FORCE_FIELDS
 from .config import REPAIR_LIMIT
 
-
 _LOGGER = logging.getLogger("PDB2PQR%s" % VERSION)
 _LOGGER.addFilter(io.DuplicateFilter())
-
 
 def build_parser():
     """Build an argument parser.
@@ -447,7 +445,10 @@ def main(args):
     Args:
         args:  argument namespace object (e.g., as returned by argparse).
     """
-    logging.basicConfig(level=getattr(logging, args.log_level))
+    # _LOGHANDLER = io.get_log_handler(args.output_pqr)
+    # _LOGGER.addHandler(_LOGHANDLER)
+    # _LOGGER.propagate = True
+
     _LOGGER.debug("Invoked with arguments: %s", args)
     print_splash_screen(args)
 
@@ -485,7 +486,3 @@ def main(args):
 
     if args.apbs_input:
         io.dump_apbs(args.output_pqr)
-
-    import pdb 
-    pdb.set_trace()
-    io.write_logging_cache(args.output_pqr)
