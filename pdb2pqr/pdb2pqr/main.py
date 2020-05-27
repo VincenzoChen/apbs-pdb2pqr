@@ -445,10 +445,6 @@ def main(args):
     Args:
         args:  argument namespace object (e.g., as returned by argparse).
     """
-    # _LOGHANDLER = io.get_log_handler(args.output_pqr)
-    # _LOGGER.addHandler(_LOGHANDLER)
-    # _LOGGER.propagate = True
-
     _LOGGER.debug("Invoked with arguments: %s", args)
     print_splash_screen(args)
 
